@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-cassandra
+spec:  
+  selector:
+    matchLabels:
+      app: api-cassandra
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: api-cassandra
+    spec:
+      serviceAccountName: k8s-deployment-sa
+      containers:
+      - name: api-cassandra
+        image: docker-nexus.example.com/api-cassandra
+        

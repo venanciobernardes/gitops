@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apicassandra-ingress-prd
+  annotations:    
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:    
+    - apicassandra-prd.example.com
+    secretName: apicassandra-tls-prd
+  rules:
+  - host: apicassandra-prd.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: api-cassandra-svc
+            port:
+              number: 8080

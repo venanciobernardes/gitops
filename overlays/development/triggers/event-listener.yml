@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: apicassandra-dev-listener
+spec:
+  serviceAccountName: eventlistenersa
+  triggers:
+    - triggerRef: trigger-apicassandra-dev
+  resources:
+    kubernetesResource:
+      serviceType: ClusterIP
+      servicePort: 8080

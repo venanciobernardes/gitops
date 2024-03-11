@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trigger-apicassandra-hmg-pipeline-ingress
+  annotations:    
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - trigger-hmg-api-cassandra.example.com
+    secretName: domain-cert
+  rules: 
+  - host: trigger-hmg-api-cassandra.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: el-apicassandra-hmg-listener
+            port:
+              number: 8080 

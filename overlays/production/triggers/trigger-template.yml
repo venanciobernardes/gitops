@@ -1,0 +1,51 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: template-apicassandra-prod
+spec:
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: prod-api-cassandra-pipeline-run-
+      spec:
+        serviceAccountName: gitdocker-saccount
+        pipelineRef:
+          name: java-pipeline
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+        workspaces:
+        - name: shared-data
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: maven-settings
+          emptyDir: {}   
+        - name: basic-docker
+          secret:
+            secretName: docker-secret-ext
+        - name: basic-git
+          secret:
+            secretName: basic-git
+        params:
+          - name: repo-url
+            value: https://github.com/venanciobernardes/api-cassandra.git
+          - name: revision
+            value: main
+          - name: repo-gitops-url
+            value: https://github.com/venanciobernardes/gitops.git
+          - name: repo-gitops-folder
+            value: gitops     
+          - name:  DOCKER_PATH
+            value: docker-nexus.example.com/api-cassandra-prod    
+          - name: CURRENT_IMAGE
+            value: docker-nexus.example.com/api-cassandra-prod
+          - name: env-folder
+            value: production
+          - name: application-name
+            value: api-cassandra-full

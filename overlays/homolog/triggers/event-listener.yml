@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: apicassandra-hmg-listener
+spec:
+  serviceAccountName: eventlistenersa
+  triggers:
+    - triggerRef: trigger-apicassandra-hmg
+  resources:
+    kubernetesResource:
+      serviceType: ClusterIP
+      servicePort: 8080

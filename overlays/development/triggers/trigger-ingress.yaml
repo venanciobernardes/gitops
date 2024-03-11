@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trigger-apicassandra-dev-pipeline-ingress
+  annotations:    
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - trigger-dev-api-cassandra.example.com
+    secretName: trigger-dev-secret
+  rules: 
+  - host: trigger-dev-api-cassandra.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: el-apicassandra-dev-listener
+            port:
+              number: 8080 

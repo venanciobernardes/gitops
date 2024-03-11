@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-cassandra
+spec:  
+  selector:
+    matchLabels:
+      app: api-cassandra
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-init-first: "true"
+        vault.hashicorp.com/role: "apicassandraprod"
+        vault.hashicorp.com/agent-inject-secret-config: "kv/production/apicassandra"
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{- with secret "kv/production/apicassandra" -}}  
+          export spring_cassandra_contact_points="{{ .Data.data.SPRING_CASSANDRA_CONTACT_POINTS }}"     
+          export spring_cassandra_keyspace_name="{{ .Data.data.SPRING_CASSANDRA_KEYSPACE_NAME }}"
+          export spring_cassandra_username="{{ .Data.data.SPRING_CASSANDRA_USERNAME}}"
+          export spring_cassandra_password="{{ .Data.data.SPRING_CASSANDRA_PASSWORD }}"       
+          export spring_cassandra_local_datacenter="{{ .Data.data.SPRING_CASSANDRA_LOCAL_DATACENTER }}"
+          export spring_cassandra_schema_action="{{ .Data.data.SPRING_CASSANDRA_SCHEMA_ACTION }}"          
+          export port="{{ .Data.data.port }}"       
+          {{- end }}  
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+      labels:
+        app: api-cassandra
+    spec:
+      serviceAccountName: apicassandrasa
+      containers:
+      - name: api-cassandra
+        image: docker-nexus.example.com/api-cassandra-prod:latest
+        imagePullPolicy: Always
+        ports:
+          - name: http
+            containerPort: 8080
+        env:            
+          - name: SPRING_CASSANDRA_PORT
+            value: "9042"            
+        command: ['sh', '-c', '. /vault/secrets/config && java -jar apicassandra']       
+        resources: 
+          requests:
+            memory: 192Mi
+            cpu: 300m
+          limits:
+            memory: 512Mi
+            cpu: 600m             
+      imagePullSecrets:
+        - name: docker-secret-ext
+      
+        

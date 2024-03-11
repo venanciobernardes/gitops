@@ -1,0 +1,74 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: java-pipeline
+spec:
+  description: |
+    This pipeline clones a git repo, builds a Docker image with Kaniko and
+    pushes it to a registry
+  params:
+    - name: CURRENT_IMAGE
+      type: string
+    - name: DOCKER_PATH
+      type: string      
+    - name: repo-url
+      type: string
+    - name: revision
+      type: string
+    - name: repo-gitops-url
+      type: string
+    - name: repo-gitops-folder
+      type: string      
+    - name: env-folder
+      type: string
+    - name: application-name
+      type: string
+  workspaces:
+    - name: shared-data
+    - name: basic-docker
+    - name: basic-git
+    - name: maven-settings
+  tasks:
+    - name: clone-repository
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-data
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+    - name: build-image
+      runAfter: ["clone-repository"]
+      taskRef:
+        name: kaniko
+      workspaces:       
+      - name: source
+        workspace: shared-data
+      - name: dockerconfig
+        workspace: basic-docker   
+      params:
+      - name: IMAGE
+        value: $(params.DOCKER_PATH):$(tasks.clone-repository.results.commit)-$(params.revision)    
+    - name: update-git
+      runAfter: ["build-image"]
+      taskRef:
+        name: update-task-gitops
+      workspaces:
+        - name: shared-data
+          workspace: shared-data
+      params:
+        - name: COMMIT
+          value: "$(tasks.clone-repository.results.commit)"
+        - name: IMAGE
+          value: $(params.CURRENT_IMAGE)
+        - name: GITOPSURL
+          value: $(params.repo-gitops-url)
+        - name: GITOPSFOLDER
+          value: $(params.repo-gitops-folder)          
+        - name: ENVFOLDER
+          value: $(params.env-folder)
+        - name: APPNAME
+          value: $(params.application-name)

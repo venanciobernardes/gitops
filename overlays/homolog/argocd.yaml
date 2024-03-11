@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-cassandra-app-hmg
+spec:
+  destination:
+    name: ""
+    namespace: "hmg"
+    server: "https://kubernetes.default.svc"
+  source:
+    path: api-cassandra-full/overlays/homolog
+    repoURL: "https://github.com/venanciobernardes/gitops.git"
+    targetRevision: HEAD
+  sources: []
+  project: apicassandra-hmg
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 2
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2
